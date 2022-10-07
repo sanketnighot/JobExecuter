@@ -13,34 +13,33 @@ Tezos.setProvider({
 
 
 const distributeFunding = async () => {
-    let previous_funding_time;
     let upcoming_funding_time;
-    let funding_period;
     let current_time = Date.parse(new Date().toUTCString())
     await axios.get("https://api.ghostnet.tzkt.io/v1/contracts/KT1WbA2H87o2RT9sTT4UaEgUAUgq6ZQhynbP/storage")
         .then( async (storage) => {
-        previous_funding_time = Date.parse(new Date(storage.data.previous_funding_time).toUTCString())
         upcoming_funding_time = Date.parse(new Date(storage.data.upcoming_funding_time).toUTCString())
         funding_period = parseInt(storage.data.funding_period)
         console.log(upcoming_funding_time, current_time)
-        if ((upcoming_funding_time - current_time) <= 60000 ) {
+        const diff = upcoming_funding_time - current_time
+        console.log("------------>  Diff: ", diff)
+        if ((diff) <= 25000 ) {
             await Tezos.contract
             .at(process.env.VMMCONTRACT)
             .then((contract) => {
-                contract.methods.distributeFunding().send();
-            }).then(()=>{
+                contract.methods.distributeFunding().send().then(()=>{
                 console.log("Zenith :~ 🚀", "Txn Sent")
             })
             .catch((error) => {
                 console.log("Zenith :~ 🚀", "Error");
                 console.log(error)
+                distributeFunding();
             });
+            })
         } else {
             console.log("Zenith :~ 🚀", "Not the funding time")
         }
     }).catch((error)=>{
-        console.log(error)
-        distributeFunding();
+        console.log("err")
         
     });
 }
