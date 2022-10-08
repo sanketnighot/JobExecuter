@@ -103,5 +103,5 @@ module.exports.executeJob = async (req, res) => {
         console.log("Zenith :~ 🚀", "Job executed 2 of 2")
     });
     console.log(new Date().toLocaleString(undefined, {timeZone: 'Asia/Kolkata'}));
-    res.send("Done")
+    // res.send("Done")
 }
