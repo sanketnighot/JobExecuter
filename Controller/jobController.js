@@ -1,11 +1,11 @@
 const _ = require('lodash') 
 const axios = require('axios');
 require('dotenv').config();
-const { TezosToolkit } = require("@taquito/taquito");
-const { InMemorySigner } = require("@taquito/signer");
+const {Map} = require('../Models/mapModel');
 
-const rpcURL = process.env.RPCURL;
-const Tezos = new TezosToolkit(rpcURL);
+const checkBooking = async () => {
+    const tileCopy = await Map.find({status: "BOOKED"});
+    if (tileCopy) {
 
 Tezos.setProvider({
     signer: new InMemorySigner(process.env.PVTKEY),
