@@ -7,37 +7,78 @@ const checkBooking = async () => {
     const tileCopy = await Map.find({status: "BOOKED"});
     if (tileCopy) {
 
-        return res.status(200).send(tileCopy);
-    } else {
-        return res.status(404).send({message: 'No Booking Now'})
-    }
+Tezos.setProvider({
+    signer: new InMemorySigner(process.env.PVTKEY),
+});
+
+
+// const distributeFunding = async () => {
+//     let upcoming_funding_time;
+//     let current_time = Date.parse(new Date().toUTCString())
+//     await axios.get("https://api.ghostnet.tzkt.io/v1/contracts/KT1Fg8n2ngkH6goke5ievWAqDaPgL6C51pqX/storage")
+//         .then( async (storage) => {
+//         upcoming_funding_time = Date.parse(new Date(storage.data.upcoming_funding_time).toUTCString())
+//         funding_period = parseInt(storage.data.funding_period)
+//         console.log(upcoming_funding_time, current_time)
+//         const diff = upcoming_funding_time - current_time
+//         console.log("------------>  Diff: ", diff)
+//         if ((diff) <= 25000 ) {
+//             await Tezos.contract
+//             .at(process.env.VMMCONTRACT)
+//             .then((contract) => {
+//                 contract.methods.distributeFunding().send().then(()=>{
+//                 console.log("Zenith :~ 🚀", "Txn Sent")
+//             })
+//             .catch((error) => {
+//                 console.log("Zenith :~ 🚀", "Error");
+//                 console.log(error)
+//                 distributeFunding();
+//             });
+//             })
+//         } else {
+//             console.log("Zenith :~ 🚀", "Not the funding time")
+//         }
+//     }).catch((error)=>{
+//         console.log("err")
+        
+//     });
+// }
+
+const liquidatePosition = async () => {
+    const storage = await axios.get("https://api.ghostnet.tzkt.io/v1/contracts/KT1F2Yj6aCFDCxBAQeW9jyfdH4VoLeMG9wTg/storage")
+    const positions = storage.data.positions
+    for (let address in positions) {
+            console.log(address, positions[address].position)
+            try {
+                await Tezos.contract
+                        .at(process.env.VMMCONTRACT) 
+                        .then((contract) => {
+                            contract.methods.liquidate(address).send().catch((error) => {
+                                console.log("Zenith :~ 🚀", "Error");
+                                console.log(error)
+                            });
+                        }).then(()=>{
+                            console.log("Zenith :~ 🚀", "Liqudted")
+                        }).catch((error) => {
+                            console.log("Zenith :~ 🚀", "Error");
+                            console.log(error)
+                        });
+
+            } catch (error) {
+                console.log("Zenith :~ Err")
+                console.log(error)
+            }
+                    
+     } 
 }
 
 module.exports.executeJob = async (req, res) => {
-    const tileCopy = await Map.find({status: "BOOKED"});
-    if (tileCopy.length != 0) {
-        for (land in tileCopy) {
-            const landData = await Map.findOne({x: tileCopy[land].x, y: tileCopy[land].y});
-            
-            let current_time = Date.parse(new Date().toUTCString())
-            let land_time = Date.parse(new Date(landData.updatedAt).toUTCString())
-            if ((current_time - land_time) > 60000) {
-                console.log((current_time - land_time), landData)
-                const landUpdate = await Map.findOneAndUpdate({x: tileCopy[land].x, y: tileCopy[land].y}, {status: ""}).then((newData)=>{
-                    if (newData.status === "") {
-                        console.log("Updated")
-                    }
-                })
-            }
-        }
-    }
-}
-
-module.exports.getBookedLands = async (req, res) => {
-    const tileCopy = await Map.find({status: "BOOKED"});
-    if (tileCopy.length != 0) {
-        return res.status(200).send(tileCopy);
-    } else {
-        return res.status(404).send({message: 'No Booking Now'})
-    }
+    // await distributeFunding().then(()=> {
+    //     console.log("Zenith :~ 🚀", "Job executed 1 of 2")
+    // });
+    await liquidatePosition().then(()=> {
+        console.log("Zenith :~ 🚀", "Job executed 2 of 2")
+    });
+    console.log(new Date().toLocaleString(undefined, {timeZone: 'Asia/Kolkata'}));
+    // res.send("Done")
 }
